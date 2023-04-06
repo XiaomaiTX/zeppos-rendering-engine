@@ -1,10 +1,13 @@
+import { log } from "@zos/utils";
+
+const logger = log.getLogger('app')
+
 App({
   globalData: {},
   onCreate(options) {
-    console.log('app on create invoke')
+    logger.log('app onCreate')
   },
-
   onDestroy(options) {
-    console.log('app on destroy invoke')
-  }
-})
+    logger.log('app onDestroy')
+  },
+});

@@ -1,75 +1,49 @@
 {
-  "configVersion": "v2",
+  "configVersion": "v3",
   "app": {
-    "appId": 28350,
-    "appName": "RenderExample",
+    "appId": 1000004,
+    "appName": "os3.0-show",
     "appType": "app",
     "version": {
-      "code": 1,
-      "name": "1.0.0"
+      "code": 3,
+      "name": "3.0"
     },
     "icon": "icon.png",
-    "vender": "XiaomaiTX",
-    "description": "An example of a 3D rendering engine running on ZeppOS"
+    "vender": "Zepp Health",
+    "description": "os3.0-showcase"
   },
-  "permissions": [
-    "data:os.device.info",
-    "device:os.local_storage",
-    "data:user.hd.calorie"
+  "permissions": ["data:os.device.info"
   ],
   "runtime": {
     "apiVersion": {
-      "compatible": "2.0.0",
-      "target": "2.0.0",
-      "minVersion": "2.0.0"
+      "compatible": "1.0.0",
+      "target": "1.0.1",
+      "minVersion": "2.0"
     }
   },
   "targets": {
-    "466x466-gtr-4": {
+    "gtr4": {
       "module": {
         "page": {
           "pages": [
-            "page/index"
+            "pages/index"
           ]
+        },
+        "app-service": {
+          "services": ["app-service/time_service", "app-event/index"]
+        },
+        "app-event": {
+          "path": "app-event/index"
         }
       },
       "platforms": [
         {
-          "name": "gtr4",
-          "deviceSource": 7930112
-        },
-        {
-          "name": "gtr4-w",
-          "deviceSource": 7930113
+          "st": "r"
         }
       ],
-      "designWidth": 466
-    },
-    "390x450-gts-4": {
-      "module": {
-        "page": {
-          "pages": [
-            "page/index","utils/fx"
-          ]
-        }
-      },
-      "platforms": [
-        {
-          "name": "gts4",
-          "deviceSource": 7995648
-        },
-        {
-          "name": "gts4-w",
-          "deviceSource": 7995649
-        }
-      ],
-      "designWidth": 390
+      "designWidth": 480
     }
   },
-  "i18n": {
-    "en-US": {
-      "appName": "Empty"
-    }
-  },
+  "debug": false,
   "defaultLanguage": "en-US"
 }
