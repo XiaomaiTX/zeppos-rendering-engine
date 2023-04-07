@@ -1,49 +1,46 @@
 {
-  "configVersion": "v3",
-  "app": {
-    "appId": 1000004,
-    "appName": "os3.0-show",
-    "appType": "app",
-    "version": {
-      "code": 3,
-      "name": "3.0"
-    },
-    "icon": "icon.png",
-    "vender": "Zepp Health",
-    "description": "os3.0-showcase"
-  },
-  "permissions": ["data:os.device.info"
-  ],
-  "runtime": {
-    "apiVersion": {
-      "compatible": "1.0.0",
-      "target": "1.0.1",
-      "minVersion": "2.0"
-    }
-  },
-  "targets": {
-    "gtr4": {
-      "module": {
-        "page": {
-          "pages": [
-            "pages/index"
-          ]
-        },
-        "app-service": {
-          "services": ["app-service/time_service", "app-event/index"]
-        },
-        "app-event": {
-          "path": "app-event/index"
-        }
-      },
-      "platforms": [
-        {
-          "st": "r"
-        }
-      ],
-      "designWidth": 480
-    }
-  },
-  "debug": false,
-  "defaultLanguage": "en-US"
+	"configVersion": "v3",
+	"app": {
+		"appId": 1000004,
+		"appName": "RenderExample",
+		"appType": "app",
+		"version": {
+			"code": 3,
+			"name": "3.0"
+		},
+		"icon": "icon.png",
+		"vender": "XiaomaiTX",
+		"description": "RenderExample"
+	},
+	"permissions": ["data:os.device.info"],
+	"runtime": {
+		"apiVersion": {
+			"compatible": "1.0.0",
+			"target": "1.0.1",
+			"minVersion": "2.0"
+		}
+	},
+	"targets": {
+		"gtr4": {
+			"module": {
+				"page": {
+					"pages": ["pages/index"]
+				},
+				"app-service": {
+					"services": ["app-service/time_service", "app-event/index"]
+				},
+				"app-event": {
+					"path": "app-event/index"
+				}
+			},
+			"platforms": [
+				{
+					"st": "r"
+				}
+			],
+			"designWidth": 480
+		}
+	},
+	"debug": false,
+	"defaultLanguage": "en-US"
 }

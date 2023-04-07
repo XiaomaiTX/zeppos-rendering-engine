@@ -20,10 +20,19 @@ function example() {
 	scene.add(cube); // 将模型 cube 加入渲染列表
 	scene.render(); // 渲染场景 scene
 }//*/
-import { createWidget, widget } from "@zos/ui";
+import { createWidget, widget, align, prop, text_style } from "@zos/ui";
 import { getDeviceInfo } from "@zos/device";
 const { height: DEVICE_HEIGHT, width: DEVICE_WIDTH } = getDeviceInfo();
-
+const canvas = createWidget(widget.CANVAS, {
+	x: 0,
+	y: 0,
+	w: DEVICE_WIDTH,
+	h: DEVICE_HEIGHT,
+});
+canvas.setPaint({
+	color: 0xffffff,
+	line_width: 3,
+});
 export class ZeppRE {
 	test() {
 		console.log("ZeppRE class test()");
@@ -66,6 +75,7 @@ export class ZeppRE {
 		 * @param {number} param.nearPlane Near clipping plane. 近截面
 		 * @param {number} param.farPlane Far clipping plane. 远截面
 		 * */
+		this.position = param.position;
 		this.fov = param.fov;
 		this.aspectRatio = param.aspectRatio;
 		this.nearPlane = param.nearPlane;
@@ -95,18 +105,27 @@ export class ZeppRE {
 			return;
 		}
 		cameraParam = {
+			position: this.position,
 			fov: this.fov,
 			aspectRatio: this.aspectRatio,
 			nearPlane: this.nearPlane,
 			farPlane: this.farPlane,
 		};
 		for (i = 0; i < this.models.length; i++) {
+			canvas.clear({
+				x: 0,
+				y: 0,
+				w: DEVICE_WIDTH,
+				h: DEVICE_HEIGHT,
+			  })
 			// TODO 循环渲染 this.models 里的所有模型
 			console.log("render " + this.models[i].name); // DEBUG
-			Model[this.models[i].name].renderVertex(
+
+			Model[this.models[i].name].renderMesh(
 				this.models[i].geometry,
 				cameraParam
 			);
+
 		}
 	}
 }
@@ -115,11 +134,12 @@ const Material = {
 	Vertex,
 };
 function xyz2xy(point, cameraParam) {
+	const cameraPosition = cameraParam.position;
+
 	// 将摄像机坐标系的原点设置为摄像机的位置
-	const cameraPosition = [0, 0, 0];
-	const x = point[0] - cameraPosition[0];
-	const y = point[1] - cameraPosition[1];
-	const z = point[2] - cameraPosition[2];
+	const x = point.x - cameraPosition[0];
+	const y = point.y - cameraPosition[1];
+	const z = point.z - cameraPosition[2];
 
 	// 将三维点坐标投影到二维平面上
 	const fovRadians = ((cameraParam.fov / 2) * Math.PI) / 180; // 视野角度转为弧度
@@ -149,31 +169,18 @@ const Model = {
 			x: 0,
 			y: 0,
 			z: 0,
-			width: 2,
-			height: 2,
-			depth: 2,
-			direction: [0, 0, 0],
+			width: 50,
+			height: 50,
+			depth: 50,
+			direction: [10, 10, 10],
 		},
-		renderVertex: function (params, cameraParam) {
-			/**
-			 * @example const vertices = this.utils.computeCubeVertices(params);
-			 * */
-			const canvas = createWidget(widget.CANVAS, {
-				x: 0,
-				y: 0,
-				w: DEVICE_WIDTH,
-				h: DEVICE_HEIGHT,
-			});
-			canvas.setPaint({
-				color: 0xffffff,
-				line_width: 3,
-			});
+		renderAxes: function (params, cameraParam) {
 
 			// DEBUG render a point
-			const point = [0, 0, 0];
-			const x_end = [20, 0, 0];
-			const y_end = [0, 20, 0];
-			const z_end = [-10, -10, 20];
+			const point = { x: 0, y: 0, z: 0 };
+			const x_end = { x: 50, y: 0, z: 0 };
+			const y_end = { x: 0, y: 50, z: 0 };
+			const z_end = { x: 0, y: 0, z: 50 };
 
 			const point_2d = xyz2xy(point, cameraParam);
 			const x_2d = xyz2xy(x_end, cameraParam);
@@ -185,7 +192,6 @@ const Model = {
 				y: DEVICE_HEIGHT / 2 + -point_2d.y,
 				color: 0xffffff,
 			});
-
 			canvas.drawLine({
 				x1: DEVICE_WIDTH / 2 + point_2d.x,
 				y1: DEVICE_HEIGHT / 2 + -point_2d.y,
@@ -200,6 +206,7 @@ const Model = {
 				y2: DEVICE_HEIGHT / 2 + -y_2d.y,
 				color: 0x00ff00,
 			});
+
 			canvas.drawLine({
 				x1: DEVICE_WIDTH / 2 + point_2d.x,
 				y1: DEVICE_HEIGHT / 2 + -point_2d.y,
@@ -207,17 +214,89 @@ const Model = {
 				y2: DEVICE_HEIGHT / 2 + -z_2d.y,
 				color: 0x0000ff,
 			});
-			/* TODO renderVertex
+		},
+		renderVertex: function (params, cameraParam) {
+			/**
+			 * @example const vertices = this.utils.computeCubeVertices(params);
+			 * */
+
+			/* TODO renderVertex//*/
+
 			const vertices = this.utils.computeCubeVertices(params);
 			console.log("vertices : " + vertices.length);
+
 			// 对于每个顶点，通过透视投影的方法映射到二维平面上
 			for (let i = 0; i < vertices.length; i++) {
 				console.log(
 					vertices[i].x + "," + vertices[i].y + "," + vertices[i].z
 				);
-			}//*/
+				point = xyz2xy(vertices[i], cameraParam);
+				console.log(point.x + "," + point.y + "," + point.z);
+
+				canvas.drawPixel({
+					x: DEVICE_WIDTH / 2 + point.x,
+					y: DEVICE_HEIGHT / 2 + -point.y,
+					color: 0xffffff,
+				});
+				createWidget(widget.TEXT, {
+					x: DEVICE_WIDTH / 2 + point.x,
+					y: DEVICE_HEIGHT / 2 + -point.y,
+					w: 20,
+					h: 34,
+					color: 0xffffff,
+					text_size: 24,
+					align_h: align.CENTER_H,
+					align_v: align.TOP,
+					text_style: text_style.NONE,
+					text: i,
+				});
+			}
 		},
-		renderMesh: function (params) {},
+		renderMesh: function (params, cameraParam) {
+
+
+			const vertices = this.utils.computeCubeVertices(params);
+			// 8个顶点的三维坐标信息
+			// 计算每个边的坐标信息并保存在一个数组中
+			const edges = [];
+
+
+			const edgeIndices = [
+				[0, 5],
+				[1, 0],
+				[1, 4],
+				[2, 3],
+				[2, 1],
+				[2, 7],
+				[3, 0],
+				[3, 6],
+				[7, 6],
+				[7, 4],
+				[6, 5],
+				[4, 5],
+			];
+
+			for (const [i, j] of edgeIndices) {
+				const edge = [vertices[i], vertices[j]];
+				edges.push(edge);
+			}/*//*/
+			for(let i = 0; i < edges.length; i++){
+				start=xyz2xy(edges[i][0], cameraParam);
+				end=xyz2xy(edges[i][1], cameraParam);
+				canvas.drawLine({
+					x1: DEVICE_WIDTH / 2 + start.x,
+					y1: DEVICE_HEIGHT / 2 + -start.y,
+					x2: DEVICE_WIDTH / 2 + end.x,
+					y2: DEVICE_HEIGHT / 2 + -end.y,
+					color: 0xffffff,
+				});
+	
+			}
+			console.log("edges "+edges)
+			console.log("edges[0] "+edges[0])
+			console.log("edges[0][0] "+edges[0][0])
+			console.log("edges:" + edges[0][0].x + "x" + edges[0][0].y);
+		},
 		utils: {
 			computeCubeVertices: function (properties) {
 				if (!properties || typeof properties !== "object") {
