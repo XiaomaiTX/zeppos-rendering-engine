@@ -38,28 +38,46 @@ Page({
     scene.createScene(); // 创建场景 scene
     scene.createCamera({
       position: [0, 0, 0],
+      rotation: [45, 45, 45],
       fov: 60,
       aspectRatio: 1,
       nearPlane: 1,
       farPlane: 10,
     });
+    console.log(scene.rotation)
     const cube = new ZeppRE();
     cube.createModel({
-      model: "POLYLINE",
+      model: "CUBE",
       geometry: {
-        points: [
-          [0, 0, 0],
-          [10, 10, 10],
-          [20, 30, 40],
-          [-20, 30, 40],
-          [12, -60, 52],
-          [42, 43, -40],
-        ],
+        x: 0,
+        y: 0,
+        z: 0,
+        width: 50,
+        height: 50,
+        depth: 50,
+        direction: [0, 0, 0],
       },
+  
     }); 
     scene.add(cube);
     // DEBUG 列出场景中的所有模型
     scene.render();
+    
+		const timer = new ZeppTimer(() => {
+			console.log(
+				"scene.rotation[1] " +
+					scene.rotation[1]
+			);
+			scene.rotation[1] =
+				scene.rotation[1] + 10;
+			console.log(
+				"scene.rotation[1] " +
+					scene.rotation[1]
+			);
+
+			scene.render();
+		}, 1000 / 60);
+		timer.start();//*/
     /*
 		const timer = new ZeppTimer(() => {
 			console.log(
@@ -74,7 +92,7 @@ Page({
 			);
 
 			scene.render();
-		}, 1000 / 45);
+		}, 1000 / 60);
 		timer.start();//*/
   },
   onHide() {
