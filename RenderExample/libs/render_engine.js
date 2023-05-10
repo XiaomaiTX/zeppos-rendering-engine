@@ -106,11 +106,6 @@ export class ZeppRE {
 		console.log("create new model");
 	}
 	render() {
-		// 校验this.type是否为scene
-		if (this.type !== "scene") {
-			console.error("Cannot add model to non-scene object.");
-			return;
-		}
 		cameraParam = {
 			position: this.position,
 			rotation: this.rotation,
@@ -119,16 +114,15 @@ export class ZeppRE {
 			nearPlane: this.nearPlane,
 			farPlane: this.farPlane,
 		};
+		canvas.clear({
+			x: 0,
+			y: 0,
+			w: DEVICE_WIDTH,
+			h: DEVICE_HEIGHT,
+		});
 
 		for (i = 0; i < this.models.length; i++) {
 			// TODO 循环渲染 this.models 里的所有模型
-			canvas.clear({
-				x: 0,
-				y: 0,
-				w: DEVICE_WIDTH,
-				h: DEVICE_HEIGHT,
-			});
-
 			Model[this.models[i].name].renderMesh(
 				this.models[i].geometry,
 				cameraParam
@@ -171,20 +165,26 @@ function xyz2xy(point, cameraParam) {
 	};
 	return projectedPoint;
 }
-function rotateCamera(point, rotations) {
+function rotatePoint(point, cameraParam) {
+	// TODO rotatePoint
+	/*
+  先完成点本身的旋转，再进行相机的旋转，最后在进行投影，这几个方法分别抽象出来作为公用方法
+  */
+}
+function rotateCamera(point, cameraParam) {
 	// 将旋转角度转换为弧度
-	var radX = (rotations[0] * Math.PI) / 180;
-	var radY = (rotations[1] * Math.PI) / 180;
-	var radZ = (rotations[2] * Math.PI) / 180;
+	const [radX, radY, radZ] = cameraParam.rotation.map(
+		(r) => (r * Math.PI) / 180
+	);
 
 	// 计算相机的旋转矩阵
-	var cosX = Math.cos(radX);
-	var sinX = Math.sin(radX);
-	var cosY = Math.cos(radY);
-	var sinY = Math.sin(radY);
-	var cosZ = Math.cos(radZ);
-	var sinZ = Math.sin(radZ);
-	var matrix = [
+	const cosX = Math.cos(radX);
+	const sinX = Math.sin(radX);
+	const cosY = Math.cos(radY);
+	const sinY = Math.sin(radY);
+	const cosZ = Math.cos(radZ);
+	const sinZ = Math.sin(radZ);
+	const matrix = [
 		cosZ * cosY,
 		-sinZ * cosX + cosZ * sinY * sinX,
 		sinZ * sinX + cosZ * sinY * cosX,
@@ -197,20 +197,73 @@ function rotateCamera(point, rotations) {
 	];
 
 	// 将顶点转换为相机坐标系
-	var x = point.x;
-	var y = point.y;
-	var z = point.z;
-	var cx = matrix[0] * x + matrix[1] * y + matrix[2] * z;
-	var cy = matrix[3] * x + matrix[4] * y + matrix[5] * z;
-	var cz = matrix[6] * x + matrix[7] * y + matrix[8] * z;
+	const { x, y, z } = point;
+	const cx = matrix[0] * x + matrix[1] * y + matrix[2] * z;
+	const cy = matrix[3] * x + matrix[4] * y + matrix[5] * z;
+	const cz = matrix[6] * x + matrix[7] * y + matrix[8] * z;
 
 	// 返回相机坐标系下的坐标
+	return { x: cx, y: cy, z: cz };
+}
+
+function perspectiveProjection(point, cameraParam) {
+	// 将摄像机坐标系的原点设置为摄像机的位置
+	const cameraPosition = cameraParam.position;
+	const x = point.x - cameraPosition[0];
+	const y = point.y - cameraPosition[1];
+	const z = point.z - cameraPosition[2];
+	// 将三维点坐标投影到二维平面上
+	const fovRadians = ((cameraParam.fov / 2) * Math.PI) / 180; // 视野角度转为弧度
+	const aspectRatio = cameraParam.aspectRatio;
+	const nearPlane = cameraParam.nearPlane;
+	const farPlane = cameraParam.farPlane;
+	const tanFov = Math.tan(fovRadians / 2);
+
+	let projectedX = x / (tanFov * nearPlane * aspectRatio);
+	let projectedY = y / (tanFov * nearPlane);
+	let projectedZ =
+		(farPlane + nearPlane) / (farPlane - nearPlane) +
+		(-2 * farPlane * nearPlane) / (farPlane - nearPlane) / -z;
+
+	// 将顶点旋转到相机坐标系
+	// 将旋转角度转换为弧度
+	const radX = (cameraParam.rotation[0] * Math.PI) / 180;
+	const radY = (cameraParam.rotation[1] * Math.PI) / 180;
+	const radZ = (cameraParam.rotation[2] * Math.PI) / 180;
+
+	// 计算相机的旋转矩阵
+	const cosX = Math.cos(radX);
+	const sinX = Math.sin(radX);
+	const cosY = Math.cos(radY);
+	const sinY = Math.sin(radY);
+	const cosZ = Math.cos(radZ);
+	const sinZ = Math.sin(radZ);
+	const matrix = [
+		cosZ * cosY,
+		-sinZ * cosX + cosZ * sinY * sinX,
+		sinZ * sinX + cosZ * sinY * cosX,
+		sinZ * cosY,
+		cosZ * cosX + sinZ * sinY * sinX,
+		-cosZ * sinX + sinZ * sinY * cosX,
+		-sinY,
+		cosY * sinX,
+		cosY * cosX,
+	];
+
+	const cx = matrix[0] * x + matrix[1] * y + matrix[2] * z;
+	const cy = matrix[3] * x + matrix[4] * y + matrix[5] * z;
+	const cz = matrix[6] * x + matrix[7] * y + matrix[8] * z;
+
+	projectedX = cx / nearPlane;
+	projectedY = cy / nearPlane;
+
 	return {
-		x: cx,
-		y: cy,
-		z: cz,
+		x: projectedX,
+		y: projectedY,
+		z: projectedZ,
 	};
 }
+
 const Model = {
 	CUBE: {
 		name: "CUBE",
@@ -222,46 +275,7 @@ const Model = {
 			height: 50,
 			depth: 50,
 			direction: [0, 0, 0],
-		},
-		renderAxes: function (params, cameraParam) {
-			// DEBUG render a point
-			const point = { x: 0, y: 0, z: 0 };
-			const x_end = { x: 50, y: 0, z: 0 };
-			const y_end = { x: 0, y: 50, z: 0 };
-			const z_end = { x: 0, y: 0, z: 50 };
-
-			const point_2d = xyz2xy(point, cameraParam);
-			const x_2d = xyz2xy(x_end, cameraParam);
-			const y_2d = xyz2xy(y_end, cameraParam);
-			const z_2d = xyz2xy(z_end, cameraParam);
-
-			canvas.drawPixel({
-				x: DEVICE_WIDTH / 2 + point_2d.x,
-				y: DEVICE_HEIGHT / 2 + -point_2d.y,
-				color: 0xffffff,
-			});
-			canvas.drawLine({
-				x1: DEVICE_WIDTH / 2 + point_2d.x,
-				y1: DEVICE_HEIGHT / 2 + -point_2d.y,
-				x2: DEVICE_WIDTH / 2 + x_2d.x,
-				y2: DEVICE_HEIGHT / 2 + -x_2d.y,
-				color: 0xff0000,
-			});
-			canvas.drawLine({
-				x1: DEVICE_WIDTH / 2 + point_2d.x,
-				y1: DEVICE_HEIGHT / 2 + -point_2d.y,
-				x2: DEVICE_WIDTH / 2 + y_2d.x,
-				y2: DEVICE_HEIGHT / 2 + -y_2d.y,
-				color: 0x00ff00,
-			});
-
-			canvas.drawLine({
-				x1: DEVICE_WIDTH / 2 + point_2d.x,
-				y1: DEVICE_HEIGHT / 2 + -point_2d.y,
-				x2: DEVICE_WIDTH / 2 + z_2d.x,
-				y2: DEVICE_HEIGHT / 2 + -z_2d.y,
-				color: 0x0000ff,
-			});
+			color: 0xffffff,
 		},
 		renderVertex: function (params, cameraParam) {
 			/**
@@ -287,14 +301,14 @@ const Model = {
 				canvas.drawPixel({
 					x: DEVICE_WIDTH / 2 + point.x,
 					y: DEVICE_HEIGHT / 2 + -point.y,
-					color: 0xffffff,
+					color: params.color,
 				});
 				createWidget(widget.TEXT, {
 					x: DEVICE_WIDTH / 2 + point.x,
 					y: DEVICE_HEIGHT / 2 + -point.y,
 					w: 20,
 					h: 34,
-					color: 0xffffff,
+					color: params.color,
 					text_size: 24,
 					align_h: align.CENTER_H,
 					align_v: align.TOP,
@@ -340,7 +354,7 @@ const Model = {
 					y1: DEVICE_HEIGHT / 2 + -start.y,
 					x2: DEVICE_WIDTH / 2 + end.x,
 					y2: DEVICE_HEIGHT / 2 + -end.y,
-					color: 0xffffff,
+					color: params.color,
 				});
 			}
 		},
@@ -389,8 +403,6 @@ const Model = {
 					const vertex = vertices[i];
 					const { x, y, z } = vertex;
 
-
-
 					const sinX = Math.sin(xRot);
 					const cosX = Math.cos(xRot);
 					const sinY = Math.sin(yRot);
@@ -414,15 +426,11 @@ const Model = {
 					vertex.y = y3 + properties.y;
 					vertex.z = z2 + properties.z;
 
-					const rotatedPoint = rotateCamera(
-						vertex,
-						cameraParam.rotation
-					);
+					const rotatedPoint = rotateCamera(vertex, cameraParam);
 
 					vertex.x = rotatedPoint.x;
 					vertex.y = rotatedPoint.y;
 					vertex.z = rotatedPoint.z;
-
 				}
 
 				return vertices;
@@ -691,46 +699,6 @@ const Model = {
 				[42, 43, -40],
 			],
 		},
-		renderAxes: function (params, cameraParam) {
-			// DEBUG render a point
-			const point = { x: 0, y: 0, z: 0 };
-			const x_end = { x: 50, y: 0, z: 0 };
-			const y_end = { x: 0, y: 50, z: 0 };
-			const z_end = { x: 0, y: 0, z: 50 };
-
-			const point_2d = xyz2xy(point, cameraParam);
-			const x_2d = xyz2xy(x_end, cameraParam);
-			const y_2d = xyz2xy(y_end, cameraParam);
-			const z_2d = xyz2xy(z_end, cameraParam);
-
-			canvas.drawPixel({
-				x: DEVICE_WIDTH / 2 + point_2d.x,
-				y: DEVICE_HEIGHT / 2 + -point_2d.y,
-				color: 0xffffff,
-			});
-			canvas.drawLine({
-				x1: DEVICE_WIDTH / 2 + point_2d.x,
-				y1: DEVICE_HEIGHT / 2 + -point_2d.y,
-				x2: DEVICE_WIDTH / 2 + x_2d.x,
-				y2: DEVICE_HEIGHT / 2 + -x_2d.y,
-				color: 0xff0000,
-			});
-			canvas.drawLine({
-				x1: DEVICE_WIDTH / 2 + point_2d.x,
-				y1: DEVICE_HEIGHT / 2 + -point_2d.y,
-				x2: DEVICE_WIDTH / 2 + y_2d.x,
-				y2: DEVICE_HEIGHT / 2 + -y_2d.y,
-				color: 0x00ff00,
-			});
-
-			canvas.drawLine({
-				x1: DEVICE_WIDTH / 2 + point_2d.x,
-				y1: DEVICE_HEIGHT / 2 + -point_2d.y,
-				x2: DEVICE_WIDTH / 2 + z_2d.x,
-				y2: DEVICE_HEIGHT / 2 + -z_2d.y,
-				color: 0x0000ff,
-			});
-		},
 
 		renderMesh: function (params, cameraParam) {
 			let lastProjectedPoint = null;
@@ -740,45 +708,199 @@ const Model = {
 					y: params.points[i][1],
 					z: params.points[i][2],
 				};
-				const projectedPoint = xyz2xy(point, cameraParam);
+				const projectedPoint = rotateCamera(point, cameraParam);
+				const rotatedPoint = xyz2xy(projectedPoint, cameraParam);
 				if (i > 0) {
 					canvas.drawLine({
 						x1: DEVICE_WIDTH / 2 + lastProjectedPoint.x,
 						y1: DEVICE_HEIGHT / 2 + -lastProjectedPoint.y,
-						x2: DEVICE_WIDTH / 2 + projectedPoint.x,
-						y2: DEVICE_HEIGHT / 2 + -projectedPoint.y,
-						color: 0xffffff,
+						x2: DEVICE_WIDTH / 2 + rotatedPoint.x,
+						y2: DEVICE_HEIGHT / 2 + -rotatedPoint.y,
+						color: params.color,
 					});
 				}
-				lastProjectedPoint = projectedPoint;
+				lastProjectedPoint = rotatedPoint;
 			}
+		},
+	},
+	PLANE: {
+		name: "PLANE",
+		geometry: {
+			position: [0, 0, 0],
+			direction: [0, 0, 0],
+			width: 10,
+			height: 10,
+		},
+
+		renderMesh: function (params, cameraParam) {
+			const points = this.utils.computeVertices(params);
+			let lastProjectedPoint = null;
+			for (let i = 0; i < points.length; i++) {
+				const point = {
+					x: points[i][0],
+					y: points[i][1],
+					z: points[i][2],
+				};
+				const projectedPoint = rotateCamera(point, cameraParam);
+				const rotatedPoint = xyz2xy(projectedPoint, cameraParam);
+				if (i > 0) {
+					canvas.drawLine({
+						x1: DEVICE_WIDTH / 2 + lastProjectedPoint.x,
+						y1: DEVICE_HEIGHT / 2 + -lastProjectedPoint.y,
+						x2: DEVICE_WIDTH / 2 + rotatedPoint.x,
+						y2: DEVICE_HEIGHT / 2 + -rotatedPoint.y,
+						color: 0xff0000,
+					});
+				}
+				lastProjectedPoint = rotatedPoint;
+			}
+		},
+		utils: {
+			computeVertices: function (params) {
+				//const position = params.position;
+				//const direction = params.direction;
+
+				const position = Vector.create(
+					params.position[0],
+					params.position[1],
+					params.position[2]
+				);
+				const direction = Vector.create(
+					params.direction[0],
+					params.direction[1],
+					params.direction[2]
+				);
+				const w = params.width;
+				const h = params.height;
+
+				console.log(position);
+				console.log(direction);
+				console.log(w);
+				console.log(h);
+
+				const normal = Vector.create(
+					direction.x,
+					direction.y,
+					direction.z
+				).normalize(); // 平面法向量
+				const t1 = Vector.create(normal.y, -normal.x, 0).normalize(); // 平面上的一个向量
+				const t2 = normal.cross(t1); // 平面上的另一个向量
+				const halfW = w / 2; // 平面宽度的一半
+				const halfH = h / 2; // 平面高度的一半
+
+				// 四个顶点的坐标
+				const vertex1 = [
+					position.x - t1.x * halfW - t2.x * halfH,
+					position.y - t1.y * halfW - t2.y * halfH,
+					position.z - t1.z * halfW - t2.z * halfH,
+				];
+				const vertex2 = [
+					position.x + t1.x * halfW - t2.x * halfH,
+					position.y + t1.y * halfW - t2.y * halfH,
+					position.z + t1.z * halfW - t2.z * halfH,
+				];
+				const vertex3 = [
+					position.x + t1.x * halfW + t2.x * halfH,
+					position.y + t1.y * halfW + t2.y * halfH,
+					position.z + t1.z * halfW + t2.z * halfH,
+				];
+				const vertex4 = [
+					position.x - t1.x * halfW + t2.x * halfH,
+					position.y - t1.y * halfW + t2.y * halfH,
+					position.z - t1.z * halfW + t2.z * halfH,
+				];
+
+				console.log([vertex1, vertex2, vertex3, vertex4]);
+
+				return [vertex1, vertex2, vertex3, vertex4];
+
+				// 计算平面法向量的单位向量
+				/*
+				const normal = Vector.normalize({
+					x: direction[0],
+					y: direction[1],
+					z: direction[2],
+				});
+				console.log(normal.x + " " + normal.y + " " + normal.z + " ");
+				// 计算平面方向向量的垂直向量t1和t2
+
+				
+				// 计算平面左上角顶点的位置
+				const leftUp = [
+					position[0] - (w / 2) * normal.x + (h / 2) * normal.y,
+					position[1] - (w / 2) * normal.y - (h / 2) * normal.x,
+					position[2] - (w / 2) * normal.z,
+				];
+
+				// 计算平面右上角顶点的位置
+				const rightUp = [
+					position[0] + (w / 2) * normal.x + (h / 2) * normal.y,
+					position[1] + (w / 2) * normal.y - (h / 2) * normal.x,
+					position[2] + (w / 2) * normal.z,
+				];
+
+				// 计算平面左下角顶点的位置
+				const leftDown = [
+					position[0] - (w / 2) * normal.x - (h / 2) * normal.y,
+					position[1] - (w / 2) * normal.y + (h / 2) * normal.x,
+					position[2] - (w / 2) * normal.z,
+				];
+
+				// 计算平面右下角顶点的位置
+				const rightDown = [
+					position[0] + (w / 2) * normal.x - (h / 2) * normal.y,
+					position[1] + (w / 2) * normal.y + (h / 2) * normal.x,
+					position[2] + (w / 2) * normal.z,
+				];
+				
+				console.log([leftUp, rightUp, rightDown, leftDown]);
+				return [leftUp, rightUp, rightDown, leftDown];//*/
+			},
 		},
 	},
 };
 
-class Vector {
-	// 叉积函数，计算当前向量与参数向量v的叉积，并返回一个新向量
-	cross(v) {
+const Vector = {
+	// 向量对象的构造函数
+	create: function (x, y, z) {
+		return Object.create(this, {
+			x: { value: x || 0, writable: true },
+			y: { value: y || 0, writable: true },
+			z: { value: z || 0, writable: true },
+		});
+	},
+
+	// 向量对象的加法方法，返回一个新向量对象
+	add: function (v) {
+		return Vector.create(this.x + v.x, this.y + v.y, this.z + v.z);
+	},
+
+	// 向量对象的减法方法，返回一个新向量对象
+	subtract: function (v) {
+		return Vector.create(this.x - v.x, this.y - v.y, this.z - v.z);
+	},
+
+	// 向量对象的乘法方法，返回一个新向量对象
+	multiply: function (n) {
+		return Vector.create(this.x * n, this.y * n, this.z * n);
+	},
+
+	// 向量对象的叉积方法，返回一个新向量对象
+	cross: function (v) {
 		const x = this.y * v.z - this.z * v.y;
 		const y = this.z * v.x - this.x * v.z;
 		const z = this.x * v.y - this.y * v.x;
-		return; //new Vector(x, y, z);
-	}
+		return Vector.create(x, y, z);
+	},
 
-	// 归一化函数，计算当前向量的单位向量，并返回一个新向量
-	normalize() {
-		// 计算当前向量的模长
-		const magnitude = Math.sqrt(
+	// 向量对象的归一化方法，返回一个新向量对象
+	normalize: function () {
+		const length = Math.sqrt(
 			this.x * this.x + this.y * this.y + this.z * this.z
 		);
-		// 如果模长为0，返回一个零向量
-		if (magnitude === 0) {
-			//return new Vector(0, 0, 0);
+		if (length === 0) {
+			return Vector.create();
 		}
-		// 否则，计算当前向量各分量除以模长的值，得到单位向量
-		const x = this.x / magnitude;
-		const y = this.y / magnitude;
-		const z = this.z / magnitude;
-		//return new Vector(x, y, z);
-	}
-}
+		return Vector.create(this.x / length, this.y / length, this.z / length);
+	},
+};
