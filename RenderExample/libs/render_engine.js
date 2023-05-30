@@ -102,6 +102,12 @@ export class ZeppRE {
 		} else {
 			this.geometry = param.geometry;
 		}
+		if (!param.material) {
+			// 校验
+			this.material = Model[param.model].material;
+		} else {
+			this.material = param.material;
+		}
 
 		console.log("create new model");
 	}
@@ -122,8 +128,8 @@ export class ZeppRE {
 		});
 
 		for (i = 0; i < this.models.length; i++) {
-			// TODO 循环渲染 this.models 里的所有模型
-			Model[this.models[i].name].renderMesh(
+			// TODO 循环渲染 this.models 里的所有模型 globalThis["render"+this.models[i].material]
+			Model[this.models[i].name]["render" + this.models[i].material](
 				this.models[i].geometry,
 				cameraParam
 			);
@@ -279,6 +285,7 @@ const Model = {
 			direction: [0, 0, 0],
 			color: 0xffffff,
 		},
+		material: "Edge",
 		renderVertex: function (params, cameraParam) {
 			/**
 			 * @example const vertices = this.utils.computeCubeVertices(params,cameraParam);
@@ -319,30 +326,53 @@ const Model = {
 				});
 			}
 		},
+		renderEdge: function (params, cameraParam) {
+			const vertices = this.utils.computeCubeVertices(
+				params,
+				cameraParam
+			);
+			//8个顶点的三维坐标信息
+			// 计算每个边的坐标信息并保存在一个数组中
+
+			const edges = [];
+
+			const edgeIndices = [
+				[0, 5],
+				[1, 0],
+				[1, 4],
+				[2, 3],
+				[2, 1],
+				[2, 7],
+				[3, 0],
+				[3, 6],
+				[7, 6],
+				[7, 4],
+				[6, 5],
+				[4, 5],
+			];
+
+			for (const [i, j] of edgeIndices) {
+				const edge = [vertices[i], vertices[j]];
+				edges.push(edge);
+			}
+			for (let i = 0; i < edges.length; i++) {
+				start = xyz2xy(edges[i][0], cameraParam);
+				end = xyz2xy(edges[i][1], cameraParam);
+				canvas.drawLine({
+					x1: DEVICE_WIDTH / 2 + start.x,
+					y1: DEVICE_HEIGHT / 2 + -start.y,
+					x2: DEVICE_WIDTH / 2 + end.x,
+					y2: DEVICE_HEIGHT / 2 + -end.y,
+					color: params.color,
+				});
+			}
+		},
 		renderMesh: function (params, cameraParam) {
 			const vertices = this.utils.computeCubeVertices(
 				params,
 				cameraParam
 			);
-			vertices.forEach((vertex, index) => {
-				console.log(
-					`Vertex ${index + 1}: (${vertex.x}, ${vertex.y}, ${
-						vertex.z
-					})`
-				);
-			});
 			const triangles = this.utils.computeCubeTriangles(vertices);
-			triangles.forEach((triangle, index) => {
-				console.log(`Triangle ${index + 1}:`);
-				triangle.forEach((vertex, vertexIndex) => {
-					console.log(
-						`Vertex ${vertexIndex + 1}: (${vertex.x}, ${
-							vertex.y
-						}, ${vertex.z})`
-					);
-				});
-				console.log("------------------");
-			});
 			for (let i = 0; i < triangles.length; i++) {
 				triangle_vertex_0 = xyz2xy(triangles[i][0], cameraParam);
 				triangle_vertex_1 = xyz2xy(triangles[i][1], cameraParam);
@@ -364,48 +394,11 @@ const Model = {
 				canvas.drawLine({
 					x1: DEVICE_WIDTH / 2 + triangle_vertex_2.x,
 					y1: DEVICE_HEIGHT / 2 + -triangle_vertex_2.y,
-					x2: DEVICE_WIDTH / 2 + triangle_vertex_2.x,
-					y2: DEVICE_HEIGHT / 2 + -triangle_vertex_2.y,
-					color: params.color,
-				});
-			} /*/
-
-			// 8个顶点的三维坐标信息
-			// 计算每个边的坐标信息并保存在一个数组中
-			/*
-			const edges = [];
-
-			const edgeIndices = [
-				[0, 5],
-				[1, 0],
-				[1, 4],
-				[2, 3],
-				[2, 1],
-				[2, 7],
-				[3, 0],
-				[3, 6],
-				[7, 6],
-				[7, 4],
-				[6, 5],
-				[4, 5],
-			];
-
-			for (const [i, j] of edgeIndices) {
-				const edge = [vertices[i], vertices[j]];
-				edges.push(edge);
-			} 
-			for (let i = 0; i < edges.length; i++) {
-				start = xyz2xy(edges[i][0], cameraParam);
-				end = xyz2xy(edges[i][1], cameraParam);
-				canvas.drawLine({
-					x1: DEVICE_WIDTH / 2 + start.x,
-					y1: DEVICE_HEIGHT / 2 + -start.y,
-					x2: DEVICE_WIDTH / 2 + end.x,
-					y2: DEVICE_HEIGHT / 2 + -end.y,
+					x2: DEVICE_WIDTH / 2 + triangle_vertex_0.x,
+					y2: DEVICE_HEIGHT / 2 + -triangle_vertex_0.y,
 					color: params.color,
 				});
 			}
-			//*/
 		},
 		utils: {
 			computeCubeVertices: function (properties, cameraParam) {
@@ -658,25 +651,45 @@ const Model = {
 				return faces;
 			},
 			computeCubeTriangles: function (vertices) {
+				/*
+				       1 -------------- 2
+				      /|              /|
+				     / |             / |
+				    /  |            /  |
+				   6 -------------- 5  |
+				   |   |           |   |
+				   |   4 ----------|-- 3
+				   |  /            |  /
+				   |/              |/
+				   7 -------------- 8
+
+				//*/
+
 				const triangles = [];
 
 				// 底面上的三角形
-				triangles.push([vertices[0], vertices[1], vertices[2]]);
-				triangles.push([vertices[0], vertices[2], vertices[3]]);
+				triangles.push([vertices[2], vertices[3], vertices[6]]);
+				triangles.push([vertices[2], vertices[7], vertices[6]]);
 
 				// 顶面上的三角形
-				triangles.push([vertices[4], vertices[5], vertices[6]]);
-				triangles.push([vertices[4], vertices[6], vertices[7]]);
+				triangles.push([vertices[1], vertices[0], vertices[5]]);
+				triangles.push([vertices[1], vertices[4], vertices[5]]);
 
-				// 侧面上的三角形
-				triangles.push([vertices[0], vertices[1], vertices[4]]);
-				triangles.push([vertices[1], vertices[2], vertices[5]]);
-				triangles.push([vertices[2], vertices[3], vertices[6]]);
-				triangles.push([vertices[3], vertices[0], vertices[7]]);
+				// 前面的三角形
 				triangles.push([vertices[4], vertices[5], vertices[6]]);
-				triangles.push([vertices[5], vertices[6], vertices[7]]);
-				triangles.push([vertices[7], vertices[4], vertices[0]]);
-				triangles.push([vertices[1], vertices[2], vertices[5]]);
+				triangles.push([vertices[4], vertices[7], vertices[6]]);
+
+				// 后面的三角形
+				triangles.push([vertices[0], vertices[1], vertices[2]]);
+				triangles.push([vertices[0], vertices[3], vertices[2]]);
+
+				// 左侧面的三角形
+				triangles.push([vertices[0], vertices[3], vertices[6]]);
+				triangles.push([vertices[0], vertices[5], vertices[6]]);
+
+				// 右侧面的三角形
+				triangles.push([vertices[1], vertices[2], vertices[7]]);
+				triangles.push([vertices[1], vertices[4], vertices[7]]);
 
 				return triangles;
 			},

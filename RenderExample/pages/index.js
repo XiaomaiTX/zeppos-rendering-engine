@@ -191,6 +191,67 @@ Page({
 				direction: [0, 0, 0],
 				color: 0xffffff,
 			},
+			material: "Mesh",
+		});
+		const cube1 = new ZeppRE();
+		cube1.createModel({
+			model: "CUBE",
+			geometry: {
+				x: -10,
+				y: 0,
+				z: 0,
+				width: 20,
+				height: 20,
+				depth: 20,
+				direction: [0, 0, 0],
+				color: 0xffffff,
+			},
+			material: "Edge",
+		});
+		const cube2 = new ZeppRE();
+		cube2.createModel({
+			model: "CUBE",
+			geometry: {
+				x: 10,
+				y: 0,
+				z: 0,
+				width: 20,
+				height: 20,
+				depth: 20,
+				direction: [0, 0, 0],
+				color: 0xffffff,
+			},
+			material: "Edge",
+		});
+		const cube3 = new ZeppRE();
+		cube3.createModel({
+			model: "CUBE",
+			geometry: {
+				x: -20,
+				y: 0,
+				z: 0,
+				width: 20,
+				height: 20,
+				depth: 20,
+				direction: [0, 0, 0],
+				color: 0xffffff,
+			},
+			material: "Edge",
+		});
+		const cube4 = new ZeppRE();
+		cube4.createModel({
+			model: "CUBE",
+			geometry: {
+				x: 20,
+				y: 0,
+				z: 0,
+				width: 20,
+				height: 20,
+				depth: 20,
+				direction: [0, 0, 0],
+				color: 0xffffff,
+			},
+			material: "Edge",
 		});
 
 		const polyline = new ZeppRE();
@@ -253,6 +314,10 @@ Page({
 			},
 		});
 		scene.add(cube);
+		//scene.add(cube1);
+		//scene.add(cube2);
+		//scene.add(cube3);
+		//scene.add(cube4);
 
 		//scene.add(polyline);
 		//scene.add(plane);
@@ -322,7 +387,6 @@ Page({
 						max: -315,
 						code() {
 							scene.rotation[0] = scene.rotation[0] + deltaY / 10;
-							console.log("前面 -135 -45");
 						},
 					},
 					{
@@ -331,7 +395,6 @@ Page({
 						max: -225,
 						code() {
 							scene.rotation[0] = scene.rotation[0] + deltaY / 10;
-							console.log("右面 -135 -45");
 						},
 					},
 					{
@@ -340,7 +403,6 @@ Page({
 						max: -135,
 						code() {
 							scene.rotation[0] = scene.rotation[0] - deltaY / 10;
-							console.log("后面 -135 -45");
 						},
 					},
 					{
@@ -349,7 +411,6 @@ Page({
 						max: -45,
 						code() {
 							scene.rotation[2] = scene.rotation[2] + deltaY / 10;
-							console.log("左面 -135 -45");
 						},
 					},
 					{
@@ -358,7 +419,6 @@ Page({
 						max: 45,
 						code() {
 							scene.rotation[0] = scene.rotation[0] + deltaY / 10;
-							console.log("前面 -45 45");
 						},
 					},
 					{
@@ -367,7 +427,6 @@ Page({
 						max: 135,
 						code() {
 							scene.rotation[0] = scene.rotation[0] + deltaY / 10;
-							console.log("右面 45 135");
 						},
 					},
 					{
@@ -376,7 +435,6 @@ Page({
 						max: 225,
 						code() {
 							scene.rotation[0] = scene.rotation[0] - deltaY / 10;
-							console.log("后面 135 225");
 						},
 					},
 					{
@@ -385,7 +443,6 @@ Page({
 						max: 315,
 						code() {
 							scene.rotation[2] = scene.rotation[2] + deltaY / 10;
-							console.log("左面 225 315");
 						},
 					},
 					{
@@ -394,7 +451,6 @@ Page({
 						max: 360,
 						code() {
 							scene.rotation[0] = scene.rotation[0] + deltaY / 10;
-							console.log("前面 315 360");
 						},
 					},
 				];
@@ -412,7 +468,7 @@ Page({
 				scene.rotation[1] = scene.rotation[1] + deltaX / 10;
 				//scene.rotation[2] = scene.rotation[2] + deltaY / 10;
 
-				scene.render();
+				scene.render(); /*
 				debug_text.setProperty(prop.MORE, {
 					text:
 						"rot " +
@@ -433,7 +489,7 @@ Page({
 						"\n" +
 						"fov " +
 						scene.fov,
-				});
+				});//*/
 			},
 			END: (result) => {},
 		});
