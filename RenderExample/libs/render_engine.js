@@ -149,19 +149,21 @@ function xyz2xy(point, cameraParam) {
 	const farPlane = cameraParam.farPlane;
 	const tanFov = Math.tan(fovRadians / 2);
 
-	const projectedX = x / (tanFov * nearPlane * aspectRatio);
-	const projectedY = y / (tanFov * nearPlane);
-	const projectedZ =
-		(farPlane + nearPlane) / (farPlane - nearPlane) +
-		(-2 * farPlane * nearPlane) / (farPlane - nearPlane) / -z;
+	const projectedX = (x * nearPlane) / (tanFov * aspectRatio);
+	const projectedY = (y * nearPlane) / tanFov;
+	//const projectedX = (x * nearPlane) / (tanFov * nearPlane * aspectRatio);
+	//const projectedY =  (y * nearPlane) / (tanFov * nearPlane);
+	//const projectedZ = -nearPlane;
+	const projectedZ = -nearPlane;
 
 	const normalizedX = projectedX / nearPlane;
 	const normalizedY = projectedY / nearPlane;
+	const normalizedZ = projectedZ / nearPlane;
 
 	const projectedPoint = {
 		x: normalizedX,
 		y: normalizedY,
-		z: projectedZ,
+		z: normalizedZ,
 	};
 	return projectedPoint;
 }
@@ -322,9 +324,55 @@ const Model = {
 				params,
 				cameraParam
 			);
+			vertices.forEach((vertex, index) => {
+				console.log(
+					`Vertex ${index + 1}: (${vertex.x}, ${vertex.y}, ${
+						vertex.z
+					})`
+				);
+			});
+			const triangles = this.utils.computeCubeTriangles(vertices);
+			triangles.forEach((triangle, index) => {
+				console.log(`Triangle ${index + 1}:`);
+				triangle.forEach((vertex, vertexIndex) => {
+					console.log(
+						`Vertex ${vertexIndex + 1}: (${vertex.x}, ${
+							vertex.y
+						}, ${vertex.z})`
+					);
+				});
+				console.log("------------------");
+			});
+			for (let i = 0; i < triangles.length; i++) {
+				triangle_vertex_0 = xyz2xy(triangles[i][0], cameraParam);
+				triangle_vertex_1 = xyz2xy(triangles[i][1], cameraParam);
+				triangle_vertex_2 = xyz2xy(triangles[i][2], cameraParam);
+				canvas.drawLine({
+					x1: DEVICE_WIDTH / 2 + triangle_vertex_0.x,
+					y1: DEVICE_HEIGHT / 2 + -triangle_vertex_0.y,
+					x2: DEVICE_WIDTH / 2 + triangle_vertex_1.x,
+					y2: DEVICE_HEIGHT / 2 + -triangle_vertex_1.y,
+					color: params.color,
+				});
+				canvas.drawLine({
+					x1: DEVICE_WIDTH / 2 + triangle_vertex_1.x,
+					y1: DEVICE_HEIGHT / 2 + -triangle_vertex_1.y,
+					x2: DEVICE_WIDTH / 2 + triangle_vertex_2.x,
+					y2: DEVICE_HEIGHT / 2 + -triangle_vertex_2.y,
+					color: params.color,
+				});
+				canvas.drawLine({
+					x1: DEVICE_WIDTH / 2 + triangle_vertex_2.x,
+					y1: DEVICE_HEIGHT / 2 + -triangle_vertex_2.y,
+					x2: DEVICE_WIDTH / 2 + triangle_vertex_2.x,
+					y2: DEVICE_HEIGHT / 2 + -triangle_vertex_2.y,
+					color: params.color,
+				});
+			} /*/
 
 			// 8个顶点的三维坐标信息
 			// 计算每个边的坐标信息并保存在一个数组中
+			/*
 			const edges = [];
 
 			const edgeIndices = [
@@ -345,7 +393,7 @@ const Model = {
 			for (const [i, j] of edgeIndices) {
 				const edge = [vertices[i], vertices[j]];
 				edges.push(edge);
-			} /*//*/
+			} 
 			for (let i = 0; i < edges.length; i++) {
 				start = xyz2xy(edges[i][0], cameraParam);
 				end = xyz2xy(edges[i][1], cameraParam);
@@ -357,6 +405,7 @@ const Model = {
 					color: params.color,
 				});
 			}
+			//*/
 		},
 		utils: {
 			computeCubeVertices: function (properties, cameraParam) {
@@ -608,83 +657,29 @@ const Model = {
 				}
 				return faces;
 			},
-			computeCubeTriangles: function (vertices) {},
-			/*
-			computeFaceIndices: function (vertices, normals) {
-				// 根据顶点和法向量，计算每个面的顶点索引
-				const indices = [];
-				for (let i = 0; i < vertices.length; i += 4) {
-					const faceNormal = normals[Math.floor(i / 4)];
-					
-					const dotProduct = Vector3.dot(faceNormal, {
-						x: 0,
-						y: 1,
-						z: 0,
-					});
-					let referenceVector;
-					if (dotProduct < -0.9 || dotProduct > 0.9) {
-						referenceVector = { x: 0, y: 0, z: 1 };
-					} else {
-						referenceVector = { x: 0, y: 1, z: 0 };
-					}
-					
-					const tangent = Vector3.cross(
-						referenceVector,
-						faceNormal
-					).normalize();
-					const bitangent = Vector3.cross(
-						faceNormal,
-						tangent
-					).normalize();
-					indices.push(i, i + 1, i + 2);
-					indices.push(i, i + 2, i + 3);
-				}
-				return indices;
+			computeCubeTriangles: function (vertices) {
+				const triangles = [];
+
+				// 底面上的三角形
+				triangles.push([vertices[0], vertices[1], vertices[2]]);
+				triangles.push([vertices[0], vertices[2], vertices[3]]);
+
+				// 顶面上的三角形
+				triangles.push([vertices[4], vertices[5], vertices[6]]);
+				triangles.push([vertices[4], vertices[6], vertices[7]]);
+
+				// 侧面上的三角形
+				triangles.push([vertices[0], vertices[1], vertices[4]]);
+				triangles.push([vertices[1], vertices[2], vertices[5]]);
+				triangles.push([vertices[2], vertices[3], vertices[6]]);
+				triangles.push([vertices[3], vertices[0], vertices[7]]);
+				triangles.push([vertices[4], vertices[5], vertices[6]]);
+				triangles.push([vertices[5], vertices[6], vertices[7]]);
+				triangles.push([vertices[7], vertices[4], vertices[0]]);
+				triangles.push([vertices[1], vertices[2], vertices[5]]);
+
+				return triangles;
 			},
-			computeFaceNormal: function (v1, v2, v3) {
-				// 计算一个三角面的法向量
-				if (
-					typeof v1 !== "object" ||
-					typeof v2 !== "object" ||
-					typeof v3 !== "object"
-				) {
-					console.log("All parameters must be objects");
-				}
-				const vector1 = new Vector(
-					v1.x - v2.x,
-					v1.y - v2.y,
-					v1.z - v2.z
-				);
-				const vector2 = new Vector(
-					v1.x - v3.x,
-					v1.y - v3.y,
-					v1.z - v3.z
-				);
-				const normalVector = vector1.cross(vector2).normalize();
-				return normalVector;
-			},
-			computeFaceNormals: function (vertices) {
-				// 根据CUBE顶点和法向量，计算每个三角面的法向量
-				if (!Array.isArray(vertices) || vertices.length !== 24) {
-					console.log(
-						"vertices must be an array containing information about 24 vertices"
-					);
-				}
-				const normals = [];
-				for (let i = 0; i < vertices.length; i += 4) {
-					const v1 = vertices[i];
-					const v2 = vertices[i + 1];
-					const v3 = vertices[i + 2];
-					const faceNormal = computeFaceNormal(v1, v2, v3);
-					normals.push(
-						faceNormal,
-						faceNormal,
-						faceNormal,
-						faceNormal
-					);
-				}
-				return normals;
-			},//*/
 		},
 	},
 	POLYLINE: {

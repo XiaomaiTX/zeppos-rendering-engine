@@ -67,8 +67,7 @@ Page({
 				scene.fov = 60;
 				scene.render();
 				debug_text.setProperty(prop.MORE, {
-					text:
-						"Debug"
+					text: "Debug",
 				});
 			},
 		});
@@ -82,7 +81,6 @@ Page({
 			press_color: 0xfeb4a8,
 			text: "-",
 			click_func: (button_widget) => {
-				
 				switch (true) {
 					case scene.fov < 20:
 						scene.fov = 20;
@@ -95,7 +93,7 @@ Page({
 					default:
 						scene.fov += 5;
 						break;
-				}//*/
+				} //*/
 				debug_text.setProperty(prop.MORE, {
 					text:
 						"rot " +
@@ -130,8 +128,7 @@ Page({
 			normal_color: 0xfc6950,
 			press_color: 0xfeb4a8,
 			text: "+",
-			click_func: (button_widget) => {
-
+			click_func: () => {
 				switch (true) {
 					case scene.fov < 20:
 						scene.fov = 20;
@@ -144,7 +141,7 @@ Page({
 					default:
 						scene.fov -= 5;
 						break;
-				}//*/
+				} //*/
 				debug_text.setProperty(prop.MORE, {
 					text:
 						"rot " +
@@ -257,12 +254,12 @@ Page({
 		});
 		scene.add(cube);
 
-		scene.add(polyline);
-		scene.add(plane);
+		//scene.add(polyline);
+		//scene.add(plane);
 
-		scene.add(LineX);
-		scene.add(LineY);
-		scene.add(LineZ);
+		//scene.add(LineX);
+		//scene.add(LineY);
+		//scene.add(LineZ);
 
 		scene.render();
 		var rotationStatus = null;
@@ -319,41 +316,85 @@ Page({
 				}
 
 				const ranges = [
-					{ min: -315, max: -225, code: {} },
-					{ min: -225, max: -135, code: {} },
 					{
+						//前面
+						min: -360,
+						max: -315,
+						code() {
+							scene.rotation[0] = scene.rotation[0] + deltaY / 10;
+							console.log("前面 -135 -45");
+						},
+					},
+					{
+						//右面
+						min: -315,
+						max: -225,
+						code() {
+							scene.rotation[0] = scene.rotation[0] + deltaY / 10;
+							console.log("右面 -135 -45");
+						},
+					},
+					{
+						//后面
+						min: -225,
+						max: -135,
+						code() {
+							scene.rotation[0] = scene.rotation[0] - deltaY / 10;
+							console.log("后面 -135 -45");
+						},
+					},
+					{
+						//左面
 						min: -135,
 						max: -45,
 						code() {
 							scene.rotation[2] = scene.rotation[2] + deltaY / 10;
+							console.log("左面 -135 -45");
 						},
 					},
 					{
+						//前面
 						min: -45,
 						max: 45,
 						code() {
 							scene.rotation[0] = scene.rotation[0] + deltaY / 10;
+							console.log("前面 -45 45");
 						},
 					},
 					{
+						//右面
 						min: 45,
 						max: 135,
 						code() {
-							scene.rotation[2] = scene.rotation[2] + deltaY / 10;
+							scene.rotation[0] = scene.rotation[0] + deltaY / 10;
+							console.log("右面 45 135");
 						},
 					},
 					{
+						//后面
 						min: 135,
 						max: 225,
 						code() {
 							scene.rotation[0] = scene.rotation[0] - deltaY / 10;
+							console.log("后面 135 225");
 						},
 					},
 					{
+						//左面
 						min: 225,
 						max: 315,
 						code() {
 							scene.rotation[2] = scene.rotation[2] + deltaY / 10;
+							console.log("左面 225 315");
+						},
+					},
+					{
+						//前面
+						min: 315,
+						max: 360,
+						code() {
+							scene.rotation[0] = scene.rotation[0] + deltaY / 10;
+							console.log("前面 315 360");
 						},
 					},
 				];
