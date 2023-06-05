@@ -191,69 +191,8 @@ Page({
 				direction: [0, 0, 0],
 				color: 0xffffff,
 			},
-			material: "Mesh",
-		});
-		const cube1 = new ZeppRE();
-		cube1.createModel({
-			model: "CUBE",
-			geometry: {
-				x: -10,
-				y: 0,
-				z: 0,
-				width: 20,
-				height: 20,
-				depth: 20,
-				direction: [0, 0, 0],
-				color: 0xffffff,
-			},
 			material: "Edge",
 		});
-		const cube2 = new ZeppRE();
-		cube2.createModel({
-			model: "CUBE",
-			geometry: {
-				x: 10,
-				y: 0,
-				z: 0,
-				width: 20,
-				height: 20,
-				depth: 20,
-				direction: [0, 0, 0],
-				color: 0xffffff,
-			},
-			material: "Edge",
-		});
-		const cube3 = new ZeppRE();
-		cube3.createModel({
-			model: "CUBE",
-			geometry: {
-				x: -20,
-				y: 0,
-				z: 0,
-				width: 20,
-				height: 20,
-				depth: 20,
-				direction: [0, 0, 0],
-				color: 0xffffff,
-			},
-			material: "Edge",
-		});
-		const cube4 = new ZeppRE();
-		cube4.createModel({
-			model: "CUBE",
-			geometry: {
-				x: 20,
-				y: 0,
-				z: 0,
-				width: 20,
-				height: 20,
-				depth: 20,
-				direction: [0, 0, 0],
-				color: 0xffffff,
-			},
-			material: "Edge",
-		});
-
 		const polyline = new ZeppRE();
 		polyline.createModel({
 			model: "POLYLINE",
@@ -269,6 +208,7 @@ Page({
 					[-20, 30, 40],
 				],
 			},
+			material: "Mesh",
 		});
 		const plane = new ZeppRE();
 		plane.createModel({
@@ -278,7 +218,9 @@ Page({
 				direction: [20, -20, 20],
 				width: 20,
 				height: 20,
+				color: 0xff0000,
 			},
+			material: "Mesh",
 		});
 		const LineX = new ZeppRE();
 		LineX.createModel({
@@ -290,6 +232,7 @@ Page({
 				],
 				color: 0xff0000,
 			},
+			material: "Mesh",
 		});
 		const LineY = new ZeppRE();
 		LineY.createModel({
@@ -301,6 +244,7 @@ Page({
 				],
 				color: 0x00ff00,
 			},
+			material: "Mesh",
 		});
 		const LineZ = new ZeppRE();
 		LineZ.createModel({
@@ -312,12 +256,10 @@ Page({
 				],
 				color: 0x0000ff,
 			},
+			material: "Mesh",
 		});
 		scene.add(cube);
-		//scene.add(cube1);
-		//scene.add(cube2);
-		//scene.add(cube3);
-		//scene.add(cube4);
+
 
 		//scene.add(polyline);
 		//scene.add(plane);
@@ -327,7 +269,6 @@ Page({
 		//scene.add(LineZ);
 
 		scene.render();
-		var rotationStatus = null;
 
 		new GestureListener().add({
 			objects: [strokeRect],
@@ -463,12 +404,10 @@ Page({
 						range.code(); // 执行对应的代码
 						break;
 					}
-				} //*/
-				//scene.rotation[0] = scene.rotation[0] + deltaY / 10;
+				} 
 				scene.rotation[1] = scene.rotation[1] + deltaX / 10;
-				//scene.rotation[2] = scene.rotation[2] + deltaY / 10;
 
-				scene.render(); /*
+				scene.render();
 				debug_text.setProperty(prop.MORE, {
 					text:
 						"rot " +
@@ -489,7 +428,7 @@ Page({
 						"\n" +
 						"fov " +
 						scene.fov,
-				});//*/
+				}); 
 			},
 			END: (result) => {},
 		});
