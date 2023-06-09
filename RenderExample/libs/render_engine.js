@@ -135,19 +135,26 @@ export class ZeppRE {
                     Model[modelName].renderEdge(geometry, cameraParam);
                     break;
                 case "Mesh":
-                    const vertices = Model[modelName].utils.computeVertices(
+                    vertices = Model[modelName].utils.computeVertices(
                         geometry,
                         cameraParam
                     );
-                    const triangles =
-                        Model[modelName].computeTriangles(vertices);
-                    renderTriangles(triangles, cameraParam);
+                    triangles =
+                        Model[modelName].utils.computeTriangles(vertices);
+                    renderTrianglesMesh(geometry, triangles, cameraParam);
                     break;
                 case "Face":
-                    Model[modelName].utils.computeTriangles(geometry);
+                    vertices = Model[modelName].utils.computeVertices(
+                        geometry,
+                        cameraParam
+                    );
+                    triangles =
+                        Model[modelName].utils.computeTriangles(vertices);
                     renderTrianglesSet.add(
                         Model[modelName].utils.computeTriangles(geometry)
                     );
+                    renderTrianglesFace(geometry, triangles, cameraParam);
+
                     break;
                 default:
                     // Handle unsupported material types
@@ -156,34 +163,53 @@ export class ZeppRE {
         }
     }
 }
-function renderTriangles(triangles, cameraParam) {
+function renderTrianglesMesh(geometry, triangles, cameraParam) {
     for (let i = 0; i < triangles.length; i++) {
-        triangle_vertex_0 = xyz2xy(triangles[i][0], cameraParam);
-        triangle_vertex_1 = xyz2xy(triangles[i][1], cameraParam);
-        triangle_vertex_2 = xyz2xy(triangles[i][2], cameraParam);
+        const triangle_vertex_0 = xyz2xy(triangles[i][0], cameraParam);
+        const triangle_vertex_1 = xyz2xy(triangles[i][1], cameraParam);
+        const triangle_vertex_2 = xyz2xy(triangles[i][2], cameraParam);
         canvas.drawLine({
             x1: DEVICE_WIDTH / 2 + triangle_vertex_0.x,
             y1: DEVICE_HEIGHT / 2 + -triangle_vertex_0.y,
             x2: DEVICE_WIDTH / 2 + triangle_vertex_1.x,
             y2: DEVICE_HEIGHT / 2 + -triangle_vertex_1.y,
-            color: params.color,
+            color: geometry.color,
         });
         canvas.drawLine({
             x1: DEVICE_WIDTH / 2 + triangle_vertex_1.x,
             y1: DEVICE_HEIGHT / 2 + -triangle_vertex_1.y,
             x2: DEVICE_WIDTH / 2 + triangle_vertex_2.x,
             y2: DEVICE_HEIGHT / 2 + -triangle_vertex_2.y,
-            color: params.color,
+            color: geometry.color,
         });
         canvas.drawLine({
             x1: DEVICE_WIDTH / 2 + triangle_vertex_2.x,
             y1: DEVICE_HEIGHT / 2 + -triangle_vertex_2.y,
             x2: DEVICE_WIDTH / 2 + triangle_vertex_0.x,
             y2: DEVICE_HEIGHT / 2 + -triangle_vertex_0.y,
-            color: params.color,
+            color: geometry.color,
         });
     }
 }
+
+function renderTrianglesFace(geometry, triangles, cameraParam) {
+    for (let i = 0; i < triangles.length; i++) {
+        const triangle_vertex_0 = xyz2xy(triangles[i][0], cameraParam);
+        const triangle_vertex_1 = xyz2xy(triangles[i][1], cameraParam);
+        const triangle_vertex_2 = xyz2xy(triangles[i][2], cameraParam);
+        const coordinateArray = [
+            { x: DEVICE_WIDTH / 2 + triangle_vertex_0.x, y: DEVICE_HEIGHT / 2 + -triangle_vertex_0.y },
+            { x: DEVICE_WIDTH / 2 + triangle_vertex_1.x, y: DEVICE_HEIGHT / 2 + -triangle_vertex_1.y },
+            { x: DEVICE_WIDTH / 2 + triangle_vertex_2.x, y: DEVICE_HEIGHT / 2 + -triangle_vertex_2.y }
+        ];
+        canvas.drawPoly({
+            data_array: coordinateArray,
+            color: geometry.color,
+        });
+
+    }
+}
+
 const Material = {
     BASIC,
     Vertex,

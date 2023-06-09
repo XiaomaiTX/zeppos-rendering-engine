@@ -191,6 +191,21 @@ Page({
 				direction: [0, 0, 0],
 				color: 0xffffff,
 			},
+			material: "Face",
+		});
+		const cube1 = new ZeppRE();
+		cube1.createModel({
+			model: "CUBE",
+			geometry: {
+				x: 0,
+				y: 0,
+				z: 0,
+				width: 20,
+				height: 20,
+				depth: 20,
+				direction: [0, 0, 0],
+				color: 0x000000,
+			},
 			material: "Edge",
 		});
 		const polyline = new ZeppRE();
@@ -259,6 +274,7 @@ Page({
 			material: "Mesh",
 		});
 		scene.add(cube);
+		scene.add(cube1);
 
 
 		//scene.add(polyline);
@@ -269,7 +285,7 @@ Page({
 		//scene.add(LineZ);
 
 		scene.render();
-
+		
 		new GestureListener().add({
 			objects: [strokeRect],
 
