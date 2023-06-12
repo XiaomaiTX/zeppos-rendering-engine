@@ -124,6 +124,11 @@ export class ZeppRE {
             w: DEVICE_WIDTH,
             h: DEVICE_HEIGHT,
         });
+        canvas.setPaint({
+            color: 0xffffff,
+            line_width: 3,
+        });
+
         let renderTrianglesSet = new Set();
         for (let i = 0; i < this.models.length; i++) {
             const material = this.models[i].material;
@@ -164,6 +169,10 @@ export class ZeppRE {
     }
 }
 function renderTrianglesMesh(geometry, triangles, cameraParam) {
+    canvas.setPaint({
+        color: geometry.color,
+        line_width: geometry.line_width,
+    });
     for (let i = 0; i < triangles.length; i++) {
         const triangle_vertex_0 = xyz2xy(triangles[i][0], cameraParam);
         const triangle_vertex_1 = xyz2xy(triangles[i][1], cameraParam);
@@ -193,27 +202,35 @@ function renderTrianglesMesh(geometry, triangles, cameraParam) {
 }
 
 function renderTrianglesFace(geometry, triangles, cameraParam) {
+    canvas.setPaint({
+        color: geometry.color,
+        line_width: geometry.line_width,
+    });
     for (let i = 0; i < triangles.length; i++) {
         const triangle_vertex_0 = xyz2xy(triangles[i][0], cameraParam);
         const triangle_vertex_1 = xyz2xy(triangles[i][1], cameraParam);
         const triangle_vertex_2 = xyz2xy(triangles[i][2], cameraParam);
         const coordinateArray = [
-            { x: DEVICE_WIDTH / 2 + triangle_vertex_0.x, y: DEVICE_HEIGHT / 2 + -triangle_vertex_0.y },
-            { x: DEVICE_WIDTH / 2 + triangle_vertex_1.x, y: DEVICE_HEIGHT / 2 + -triangle_vertex_1.y },
-            { x: DEVICE_WIDTH / 2 + triangle_vertex_2.x, y: DEVICE_HEIGHT / 2 + -triangle_vertex_2.y }
+            {
+                x: DEVICE_WIDTH / 2 + triangle_vertex_0.x,
+                y: DEVICE_HEIGHT / 2 + -triangle_vertex_0.y,
+            },
+            {
+                x: DEVICE_WIDTH / 2 + triangle_vertex_1.x,
+                y: DEVICE_HEIGHT / 2 + -triangle_vertex_1.y,
+            },
+            {
+                x: DEVICE_WIDTH / 2 + triangle_vertex_2.x,
+                y: DEVICE_HEIGHT / 2 + -triangle_vertex_2.y,
+            },
         ];
         canvas.drawPoly({
             data_array: coordinateArray,
             color: geometry.color,
         });
-
     }
 }
 
-const Material = {
-    BASIC,
-    Vertex,
-};
 function xyz2xy(point, cameraParam) {
     const cameraPosition = cameraParam.position;
 
@@ -358,45 +375,9 @@ const Model = {
             depth: 50,
             direction: [0, 0, 0],
             color: 0xffffff,
+            line_width: 3,
         },
         material: "Edge",
-        renderVertex: function (params, cameraParam) {
-            /**
-             * @example const vertices = this.utils.computeVertices(params,cameraParam);
-             * */
-
-            /* TODO renderVertex//*/
-
-            const vertices = this.utils.computeVertices(params, cameraParam);
-            console.log("vertices : " + vertices.length);
-
-            // 对于每个顶点，通过透视投影的方法映射到二维平面上
-            for (let i = 0; i < vertices.length; i++) {
-                console.log(
-                    vertices[i].x + "," + vertices[i].y + "," + vertices[i].z
-                );
-                point = xyz2xy(vertices[i], cameraParam);
-                console.log(point.x + "," + point.y + "," + point.z);
-
-                canvas.drawPixel({
-                    x: DEVICE_WIDTH / 2 + point.x,
-                    y: DEVICE_HEIGHT / 2 + -point.y,
-                    color: params.color,
-                });
-                createWidget(widget.TEXT, {
-                    x: DEVICE_WIDTH / 2 + point.x,
-                    y: DEVICE_HEIGHT / 2 + -point.y,
-                    w: 20,
-                    h: 34,
-                    color: params.color,
-                    text_size: 24,
-                    align_h: align.CENTER_H,
-                    align_v: align.TOP,
-                    text_style: text_style.NONE,
-                    text: i,
-                });
-            }
-        },
         renderEdge: function (params, cameraParam) {
             const vertices = this.utils.computeVertices(params, cameraParam);
             //8个顶点的三维坐标信息
@@ -434,10 +415,6 @@ const Model = {
                     color: params.color,
                 });
             }
-        },
-        renderMesh: function (params, cameraParam) {
-            const vertices = this.utils.computeVertices(params, cameraParam);
-            const triangles = this.utils.computeTriangles(vertices);
         },
 
         utils: {
@@ -517,179 +494,6 @@ const Model = {
 
                 return vertices;
             },
-            computeCubeFaces: function (properties) {
-                //通过CUBE的属性{ x, y, z, width, height, depth }计算出立方体的顶点和面
-
-                if (!properties || typeof properties !== "object") {
-                    console.log("Invalid input: properties must be an object.");
-                }
-                const { x, y, z, width, height, depth, direction } = properties;
-                if (
-                    // 判断 x, y, z, width, height, depth 是否为数字类型
-                    typeof x !== "number" ||
-                    typeof y !== "number" ||
-                    typeof z !== "number" ||
-                    typeof width !== "number" ||
-                    typeof height !== "number" ||
-                    typeof depth !== "number" ||
-                    // 判断 direction 是否为数组类型，数组长度是否为3，以及数组每个元素是否为数字类型
-                    !Array.isArray(direction) ||
-                    direction.length !== 3 ||
-                    !direction.every((angle) => typeof angle === "number")
-                ) {
-                    console.log(
-                        "Invalid input: x, y, z, width, height, depth, and direction must be numbers."
-                    ); //*/
-                }
-
-                const halfWidth = width / 2;
-                const halfHeight = height / 2;
-                const halfDepth = depth / 2;
-
-                // 计算立方体每个面的顶点坐标
-                const faces = [
-                    // 前面
-                    {
-                        x: x - halfWidth,
-                        y: y + halfHeight,
-                        z: z + halfDepth,
-                    },
-                    {
-                        x: x + halfWidth,
-                        y: y + halfHeight,
-                        z: z + halfDepth,
-                    },
-                    {
-                        x: x + halfWidth,
-                        y: y - halfHeight,
-                        z: z + halfDepth,
-                    },
-                    {
-                        x: x - halfWidth,
-                        y: y - halfHeight,
-                        z: z + halfDepth,
-                    },
-
-                    // 后面
-                    {
-                        x: x + halfWidth,
-                        y: y + halfHeight,
-                        z: z - halfDepth,
-                    },
-                    {
-                        x: x - halfWidth,
-                        y: y + halfHeight,
-                        z: z - halfDepth,
-                    },
-                    {
-                        x: x - halfWidth,
-                        y: y - halfHeight,
-                        z: z - halfDepth,
-                    },
-                    {
-                        x: x + halfWidth,
-                        y: y - halfHeight,
-                        z: z - halfDepth,
-                    },
-
-                    // 左面
-                    {
-                        x: x - halfWidth,
-                        y: y + halfHeight,
-                        z: z - halfDepth,
-                    },
-                    {
-                        x: x - halfWidth,
-                        y: y + halfHeight,
-                        z: z + halfDepth,
-                    },
-                    {
-                        x: x - halfWidth,
-                        y: y - halfHeight,
-                        z: z + halfDepth,
-                    },
-                    {
-                        x: x - halfWidth,
-                        y: y - halfHeight,
-                        z: z - halfDepth,
-                    },
-
-                    // 右面
-                    {
-                        x: x + halfWidth,
-                        y: y + halfHeight,
-                        z: z + halfDepth,
-                    },
-                    {
-                        x: x + halfWidth,
-                        y: y + halfHeight,
-                        z: z - halfDepth,
-                    },
-                    {
-                        x: x + halfWidth,
-                        y: y - halfHeight,
-                        z: z - halfDepth,
-                    },
-                    {
-                        x: x + halfWidth,
-                        y: y - halfHeight,
-                        z: z + halfDepth,
-                    },
-
-                    // 上面
-                    {
-                        x: x - halfWidth,
-                        y: y + halfHeight,
-                        z: z - halfDepth,
-                    },
-                    {
-                        x: x + halfWidth,
-                        y: y + halfHeight,
-                        z: z - halfDepth,
-                    },
-                    {
-                        x: x + halfWidth,
-                        y: y + halfHeight,
-                        z: z + halfDepth,
-                    },
-                    {
-                        x: x - halfWidth,
-                        y: y + halfHeight,
-                        z: z + halfDepth,
-                    },
-                ];
-                // 根据direction旋转顶点坐标
-                const [xRot, yRot, zRot] = properties.direction.map(
-                    (angle) => (angle * Math.PI) / 180
-                );
-                const cosX = Math.cos(xRot);
-                const sinX = Math.sin(xRot);
-                const cosY = Math.cos(yRot);
-                const sinY = Math.sin(yRot);
-                const cosZ = Math.cos(zRot);
-                const sinZ = Math.sin(zRot);
-                const cosTheta = cosY * cosX;
-                const sinTheta = cosY * sinX;
-                const cosPhi = sinY * cosZ + cosY * sinX * sinZ;
-                const sinPhi = sinY * sinZ - cosY * sinX * cosZ;
-                for (let i = 0; i < faces.length; i++) {
-                    const vertex = faces[i];
-                    let [x, y, z] = [vertex.x, vertex.y, vertex.z];
-                    const xNew =
-                        cosZ * cosY * x +
-                        (cosZ * sinY * sinX - sinZ * cosX) * y +
-                        (cosZ * sinY * cosX + sinZ * sinX) * z;
-                    const yNew =
-                        sinZ * cosY * x +
-                        (sinZ * sinY * sinX + cosZ * cosX) * y +
-                        (sinZ * sinY * cosX - cosZ * sinX) * z;
-                    const zNew = -sinY * x + cosY * sinX * y + cosY * cosX * z;
-                    vertex.x = xNew;
-                    vertex.y = yNew;
-                    vertex.z = zNew;
-                }
-                return faces;
-            },
             computeTriangles: function (vertices) {
                 /*
 				       1 -------------- 2
@@ -745,9 +549,16 @@ const Model = {
                 [12, -60, 52],
                 [42, 43, -40],
             ],
+            color: 0xffffff,
+            line_width: 1,
         },
+        material: "Edge",
 
-        renderMesh: function (params, cameraParam) {
+        renderEdge: function (params, cameraParam) {
+            canvas.setPaint({
+                color: params.color,
+                line_width: params.line_width,
+            });
             let lastProjectedPoint = null;
             for (let i = 0; i < params.points.length; i++) {
                 const point = {
@@ -780,47 +591,11 @@ const Model = {
             color: 0xffffff,
         },
 
-        renderMesh1: function (params, cameraParam) {
-            const vertices = this.utils.computeVertices(params);
-            let lastProjectedPoint = null;
-            const firstPoint = {
-                x: vertices[0][0],
-                y: vertices[0][1],
-                z: vertices[0][2],
-            };
-            const firstProjectedPoint = rotateCamera(firstPoint, cameraParam);
-            const firstRotatedPoint = xyz2xy(firstProjectedPoint, cameraParam);
-
-            for (let i = 0; i < vertices.length; i++) {
-                const vertex = {
-                    x: vertices[i][0],
-                    y: vertices[i][1],
-                    z: vertices[i][2],
-                };
-                const projectedPoint = rotateCamera(vertex, cameraParam);
-                const rotatedPoint = xyz2xy(projectedPoint, cameraParam);
-
-                if (lastProjectedPoint) {
-                    canvas.drawLine({
-                        x1: DEVICE_WIDTH / 2 + lastProjectedPoint.x,
-                        y1: DEVICE_HEIGHT / 2 + -lastProjectedPoint.y,
-                        x2: DEVICE_WIDTH / 2 + rotatedPoint.x,
-                        y2: DEVICE_HEIGHT / 2 + -rotatedPoint.y,
-                        color: 0xff0000,
-                    });
-                }
-
-                lastProjectedPoint = rotatedPoint;
-            }
-            canvas.drawLine({
-                x1: DEVICE_WIDTH / 2 + lastProjectedPoint.x,
-                y1: DEVICE_HEIGHT / 2 + -lastProjectedPoint.y,
-                x2: DEVICE_WIDTH / 2 + firstRotatedPoint.x,
-                y2: DEVICE_HEIGHT / 2 + -firstRotatedPoint.y,
-                color: 0xff0000,
-            });
-        },
         renderMesh: function (params, cameraParam) {
+            canvas.setPaint({
+                color: geometry.color,
+                line_width: geometry.line_width,
+            });
             const vertices = this.utils.computeVertices(params);
 
             const triangles = this.utils.computeTriangles(vertices);
